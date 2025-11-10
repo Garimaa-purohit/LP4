@@ -1,0 +1,102 @@
+
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+
+import os
+print(os.getcwd())
+
+
+
+df = pd.read_csv('practical_lp3/ml/churn.csv')
+
+
+
+df.head()
+
+
+
+# Drop irrelevant columns
+df = df.drop(['RowNumber', 'CustomerId', 'Surname'], axis=1)
+
+
+#Convert the categorical variables to numerical values
+label_encoder = LabelEncoder()
+
+# Apply Label Encoding on 'Gender' and 'Geography'
+df['Gender'] = label_encoder.fit_transform(df['Gender'])  # Female=0, Male=1
+df['Geography'] = label_encoder.fit_transform(df['Geography'])  # France=0, Germany=1, Spain=2
+df
+
+
+# Separate the features and the target variables
+X = df.drop('Exited', axis = 1) # Features
+Y = df['Exited'] # Target
+
+
+# Split the dataset into training and testing set
+x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = 0.2)
+
+# Normalize the dataset
+scaler = StandardScaler()
+X_train = scaler.fit_transform(x_train)
+X_test = scaler.transform(x_test)
+# we use only transform on xtest as it uses the same mean and SD learned from the training set
+
+
+
+
+
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+
+
+
+model = Sequential()
+
+# First hidden layer with 32 neurons can capture many low-level features.
+model.add(Dense(activation='relu', units=32, input_dim=X_train.shape[1]))  # Input layer with more neurons
+
+# The dropout layer helps mitigate overfitting or temporarily deactivating 
+# a random subset of neurons during each forward pass in training, 
+# forcing the model to learn more robust features.
+model.add(Dropout(0.5))  
+
+# ReLU (Rectified Linear Unit) activation function
+# Formula: f(x) = max(0,x)
+
+# The second hidden layer with 16 neurons refines the prev. captured features 
+# and captures higher-level abstractions.
+model.add(Dense(activation='relu', units=16))  # Second hidden layer
+model.add(Dense(activation='sigmoid', units=1))  # Output layer for binary classification
+
+# Compile the model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+# During training, the cross-entropy loss function exponentially increases the penalty for wrong outputs 
+# to drive the weights and biases more aggressively in the right direction.
+
+
+
+
+
+model.fit(X_train, y_train, batch_size=32, epochs=50)
+
+
+
+y_pred = model.predict(X_test)
+y_pred = (y_pred > 0.5) # to convert the probabilistic values to True or False
+y_pred
+
+
+from sklearn.metrics import accuracy_score, confusion_matrix
+# Calculate accuracy score
+accuracy = accuracy_score(y_test, y_pred)
+
+# Print confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+# Print the results
+print("Accuracy Score:", accuracy)
+print("Confusion Matrix:\n", conf_matrix)
+

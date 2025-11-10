@@ -1,0 +1,52 @@
+
+import pandas as pd
+df = pd.read_csv('2-emails.csv')
+df
+
+
+df.isnull().sum()
+df.drop('Email No.', inplace=True, axis=1)
+
+
+
+from sklearn.model_selection import train_test_split
+
+X = df.drop('Prediction', axis=1)
+y = df['Prediction']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+
+
+
+from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier()
+knn.fit(X_train, y_train)
+y_pred_knn = knn.predict(X_test)
+y_pred_knn
+
+
+
+
+from sklearn.metrics import confusion_matrix, classification_report
+
+print("KNN Confusion Matrix:\n", confusion_matrix(y_test, y_pred_knn))
+print("\n\nKNN Classification Report: \n", classification_report(y_test, y_pred_knn))
+
+
+
+from sklearn.svm import SVC
+
+svm = SVC(kernel='linear', probability=True)
+svm.fit(X_train, y_train)
+y_pred_svm = svm.predict(X_test)
+y_pred_svm
+
+
+
+print("KNN Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
+print("\n\nKNN Classification Report: \n", classification_report(y_test, y_pred_svm))
+
+
+

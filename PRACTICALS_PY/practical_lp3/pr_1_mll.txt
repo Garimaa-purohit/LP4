@@ -1,0 +1,165 @@
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+
+
+df = pd.read_csv("1-uber.csv")
+df.head()
+
+
+
+df.dtypes
+
+
+df.describe()
+
+
+# check for null values in the data-frame
+df.isna().sum()
+
+# dropoff_longitude and dropoff_latitude have a single null value
+# remove those rows from the data-frame
+df.dropna(inplace=True)
+
+
+
+df.drop(['Unnamed: 0', 'key'], axis=1, inplace=True)
+
+
+
+# remove date from the `pickup_datetime` column
+# and keep only 'hour of the day'
+df["pickup_datetime"] = pd.to_datetime(df["pickup_datetime"]).dt.strftime("%H").astype('float32')
+df = df.rename(columns={"pickup_datetime": "time"})
+
+
+
+import math
+
+# add distance between pickup location and dropoff location
+# in the df
+
+def euclidean_distance(lat1, lon1, lat2, lon2):
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    distance = math.sqrt(dlat**2 + dlon**2)
+    return distance
+
+df['distance'] = df.apply(
+    lambda row: euclidean_distance(
+        row['pickup_latitude'], 
+        row['pickup_longitude'], 
+        row['dropoff_latitude'], 
+        row['dropoff_longitude']
+    ), axis=1
+)
+
+
+
+
+# remove outlier(s) where passenger_count > 100
+sns.scatterplot(df, y="fare_amount", x="passenger_count")
+df = df[df["passenger_count"] < 150]
+
+
+
+
+# remove outliers from pickup/dropoff locations
+def remove_outliers(feature):
+    global df
+    q3 , q1 = np.percentile( df[feature] , [ 75 , 25 ] )
+    iqr = q3 - q1
+    df = df[ (df[feature] >= q1 - 1.5 * iqr) & (df[feature] <= q3 + 1.5 * iqr) ]
+    
+remove_outliers("pickup_latitude")
+remove_outliers("pickup_longitude")
+remove_outliers("dropoff_latitude")
+remove_outliers("dropoff_longitude")
+
+
+
+
+
+
+
+
+df_numeric = df.select_dtypes(include=['number'])
+df_numeric.corr(method='pearson')
+
+
+X = X.select_dtypes(include=['number'])
+
+X_train.dtypes
+
+
+X = X.drop('pickup_datetime', axis=1)
+
+# Convert pickup_datetime to datetime type
+df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'], errors='coerce')
+
+# Extract useful time-based features
+df['hour'] = df['pickup_datetime'].dt.hour
+df['day'] = df['pickup_datetime'].dt.day
+df['month'] = df['pickup_datetime'].dt.month
+df['year'] = df['pickup_datetime'].dt.year
+df['day_of_week'] = df['pickup_datetime'].dt.dayofweek
+
+# Drop original datetime column
+df = df.drop('pickup_datetime', axis=1)
+
+# Continue as usual
+X = df.drop('fare_amount', axis=1)
+y = df['fare_amount']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+
+
+from sklearn.linear_model import LinearRegression
+
+# linear regression model
+model = LinearRegression()
+model.fit(X_train_scaled, y_train)
+
+# Predict on the test set
+y_pred = model.predict(X_test_scaled)
+
+
+from sklearn.metrics import r2_score
+from sklearn.metrics import root_mean_squared_error
+
+print("R2 score: ", r2_score(y_test, y_pred))
+print("RMSE: ", root_mean_squared_error(y_test, y_pred))
+
+
+
+from sklearn.ensemble import RandomForestRegressor
+
+# random forest regression model
+# takes more time to train (comeback after 6 mins)
+model = RandomForestRegressor()
+model.fit(X_train_scaled, y_train)
+
+# Predict on the test set
+y_pred = model.predict(X_test_scaled)
+
+
+
+
+from sklearn.metrics import r2_score
+from sklearn.metrics import root_mean_squared_error
+
+print("R2 score: ", r2_score(y_test, y_pred))
+print("RMSE: ", root_mean_squared_error(y_test, y_pred))
+
+
+
+
+
+
