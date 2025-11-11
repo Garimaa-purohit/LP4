@@ -1,0 +1,27 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+ds = pd.read_csv('/content/3-Churn_Modelling.csv')
+ds
+ds.drop(['RowNumber','Surname','CustomerId'], axis = 1, inplace= True)
+encoder = LabelEncoder()
+ds['Gender'] = encoder.fit_transform(ds['Gender'])
+ds['Geography'] = encoder.fit_transform(ds['Geography'])
+X = ds.drop(['Exited'], axis = 1)
+y = ds['Exited']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+from sklearn.neural_network import MLPClassifier
+
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,2), random_state=1, max_iter=10000) # Increased max_iter
+clf.fit(X_train_scaled, y_train)
+y_pred = clf.predict(X_test_scaled)
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+print("Accuracy: ", accuracy_score(y_test, y_pred))
+cm = confusion_matrix(y_test, y_pred)
+cm
