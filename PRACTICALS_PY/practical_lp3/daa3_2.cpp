@@ -7,7 +7,7 @@ struct Item {
 };
 
 // Function to solve the knapsack problem using dynamic programming
-int knapsack(int W, vector<Item> &items) {
+int knapsack(int W, vector<Item> &items,vector<int> &selected) {
   int n = items.size();
   vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
 
@@ -26,6 +26,16 @@ int knapsack(int W, vector<Item> &items) {
       }
     }
   }
+   int w = W;
+  for (int i = n; i > 0 && w > 0; i--) {
+    if (dp[i][w] != dp[i - 1][w]) {
+      selected.push_back(i - 1);  // item i-1 was included
+      w -= items[i - 1].weight;
+    }
+  }
+
+  reverse(selected.begin(), selected.end()); // Optional, for order
+  return dp[n][W];
 
   // The maximum value that can be obtained with the given capacity W
   return dp[n][W];
@@ -37,8 +47,15 @@ int main() {
                         {23, 4},  {72, 50}, {80, 8},  {62, 61},
                         {65, 85}, {46, 87}}; // {weight, value}
 
-  int max_value = knapsack(W, items);
+  vector<int> selected;
+  int max_value = knapsack(W, items, selected);
+
   cout << "Maximum value: " << max_value << endl;
+  cout << "Selected items (index, weight, value):" << endl;
+  for (int i : selected) {
+    cout << "Item " << i << " -> Weight: " << items[i].weight
+         << ", Value: " << items[i].value << endl;
+  }
 
   return 0;
 }
